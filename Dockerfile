@@ -55,7 +55,7 @@ fi\n\
 \n\
 echo "Sincronizando codigo fonte..."\n\
 if [ ! -d "/workspace/.git" ]; then\n\
-    git clone $KERNEL_REPO .\n\
+    git clone --depth 2 $KERNEL_REPO .\n\
 else\n\
     git fetch --all --tags\n\
     git clean -fdx\n\
