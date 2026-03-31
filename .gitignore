@@ -2,3 +2,4 @@ out/
 custom.config
 error_trace.log
 kernel_modules.tar.gz
+wsl-kernel-source/
