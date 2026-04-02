@@ -49,24 +49,45 @@ case "$ACTION" in
         echo "Configuration saved to /out/custom.config"
         ;;
     "inject-waydroid")
-        echo "Injecting strict Waydroid configurations..."
+        echo "Injetando configuracoes unificadas para Waydroid e Docker..."
         if [ ! -x "./scripts/config" ]; then
-            echo "Error: Configuration script missing or not executable."
+            echo "Erro: Script de configuracao nao encontrado ou sem permissao."
             exit 1
         fi
         cp Microsoft/config-wsl .config
+
         ./scripts/config --enable CONFIG_ANDROID
         ./scripts/config --enable CONFIG_ANDROID_BINDER_IPC
         ./scripts/config --enable CONFIG_ANDROID_BINDERFS
-        ./scripts/config --enable CONFIG_BRIDGE
-        ./scripts/config --enable CONFIG_NETFILTER
-        ./scripts/config --enable CONFIG_IP_NF_IPTABLES
-        ./scripts/config --enable CONFIG_IP_NF_NAT
-        ./scripts/config --enable CONFIG_VETH
         ./scripts/config --enable CONFIG_PSI
+
+        ./scripts/config --enable CONFIG_VETH
+        ./scripts/config --enable CONFIG_BRIDGE
+        ./scripts/config --enable CONFIG_BRIDGE_NETFILTER
+
+        ./scripts/config --enable CONFIG_NETFILTER
+        ./scripts/config --enable CONFIG_NETFILTER_ADVANCED
+
+        ./scripts/config --enable CONFIG_NF_TABLES
+        ./scripts/config --enable CONFIG_NFT_NAT
+        ./scripts/config --enable CONFIG_NFT_COMPAT
+
+        ./scripts/config --enable CONFIG_NETFILTER_XTABLES
+        ./scripts/config --enable CONFIG_NETFILTER_XT_MARK
+        ./scripts/config --enable CONFIG_NETFILTER_XT_MATCH_ADDRTYPE
+        ./scripts/config --enable CONFIG_NETFILTER_XT_MATCH_CONNTRACK
+        ./scripts/config --enable CONFIG_NETFILTER_XT_TARGET_CHECKSUM
+        ./scripts/config --enable CONFIG_NETFILTER_XT_TARGET_MASQUERADE
+
+        ./scripts/config --enable CONFIG_IP_NF_IPTABLES
+        ./scripts/config --enable CONFIG_IP_NF_FILTER
+        ./scripts/config --enable CONFIG_IP_NF_NAT
+        ./scripts/config --enable CONFIG_IP_NF_MANGLE
+        ./scripts/config --enable CONFIG_IP_NF_TARGET_MASQUERADE
+
         make olddefconfig
         cp .config /out/custom.config
-        echo "Waydroid configuration injected and saved to /out/custom.config"
+        echo "Configuracao universal aplicada e salva em /out/custom.config"
         ;;
     "custom")
         echo "Building from custom configuration and modules..."
