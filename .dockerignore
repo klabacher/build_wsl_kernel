@@ -2,3 +2,5 @@ workspace/
 out/
 wsl-builder.sh
 README.md
+.git/
+*.tar.gz

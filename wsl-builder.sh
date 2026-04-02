@@ -17,10 +17,7 @@ if ! docker info &> /dev/null; then
     exit 1
 fi
 
-if ! mkdir -p "$WORKSPACE_DIR" "$OUT_DIR"; then
-    echo "Error: Failed to create required directories." >&2
-    exit 1
-fi
+mkdir -p "$WORKSPACE_DIR" "$OUT_DIR"
 
 build_image() {
     clear
@@ -37,9 +34,16 @@ build_image() {
 
 run_container() {
     local cmd="$1"
+    
+    if ! docker volume create ccache_vol &> /dev/null; then
+        echo "Error: Failed to ensure ccache volume exists." >&2
+        return 1
+    fi
+
     if ! docker run --rm -it \
         -v "$WORKSPACE_DIR:/workspace:rw" \
         -v "$OUT_DIR:/out:rw" \
+        -v ccache_vol:/root/.cache/ccache:rw \
         "$IMAGE_NAME" "$cmd"; then
         echo "Error: Container execution failed for command '$cmd'." >&2
         return 1
@@ -53,18 +57,19 @@ show_menu() {
     echo "------------------"
     echo "1. Build default kernel"
     echo "2. Run menuconfig (Customize features)"
-    echo "3. Build custom kernel (Requires step 2)"
-    echo "4. Make clean (Remove build artifacts)"
-    echo "5. Clean workspace (Delete all sources and outputs)"
-    echo "6. Exit"
+    echo "3. Inject strict Waydroid configuration (Auto)"
+    echo "4. Build custom kernel (Requires step 2 or 3)"
+    echo "5. Make clean (Remove build artifacts)"
+    echo "6. Clean workspace (Delete all sources and outputs)"
+    echo "7. Exit"
     echo "------------------"
-    printf "Select an option (1-6): "
+    printf "Select an option (1-7): "
 }
 
 validate_input() {
     local input="$1"
-    if [[ ! "$input" =~ ^[1-6]$ ]]; then
-        echo "Error: Invalid input. Expected a single digit between 1 and 6." >&2
+    if [[ ! "$input" =~ ^[1-7]$ ]]; then
+        echo "Error: Invalid input. Expected a single digit between 1 and 7." >&2
         sleep 2
         return 1
     fi
@@ -76,7 +81,7 @@ clean_workspace() {
     if docker run --rm \
         -v "$WORKSPACE_DIR:/workspace:rw" \
         -v "$OUT_DIR:/out:rw" \
-        alpine sh -c 'su -c "rm -rf /workspace/* /workspace/.[!.]* /out/* /out/.[!.]*" 2>/dev/null || true'; then
+        alpine sh -c 'rm -rf /workspace/* /workspace/.[!.]* /out/* /out/.[!.]* 2>/dev/null || true'; then
         echo "Clean complete."
     else
         echo "Error: Failed to clean directories." >&2
@@ -102,18 +107,22 @@ main() {
                 run_container "menuconfig" || true
                 ;;
             3)
-                run_container "custom" || true
+                run_container "inject-waydroid" || true
                 read -r -p "Process finished. Press Enter to return to menu..."
                 ;;
             4)
-                run_container "make-clean" || true
+                run_container "custom" || true
                 read -r -p "Process finished. Press Enter to return to menu..."
                 ;;
             5)
+                run_container "make-clean" || true
+                read -r -p "Process finished. Press Enter to return to menu..."
+                ;;
+            6)
                 clean_workspace
                 read -r -p "Press Enter to return to menu..."
                 ;;
-            6)
+            7)
                 echo "Exiting."
                 exit 0
                 ;;
