@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dwarves rsync kmod cpio \
     && rm -rf /var/lib/apt/lists/*
 
+# Install ccache for faster builds
+RUN apt-get update && apt-get install -y ccache
+ENV PATH="/usr/lib/ccache:$PATH"
+
 WORKDIR /workspace
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
